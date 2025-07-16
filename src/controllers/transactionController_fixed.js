@@ -202,48 +202,107 @@ const importTransactions = async (req, res) => {
       });
     }
 
-    const transactions = [];
+    const rawRows = [];
     const errors = [];
 
-    // Parse CSV file
-    const stream = fs.createReadStream(req.file.path)
+    // Parse CSV file and collect all rows first
+    fs.createReadStream(req.file.path)
       .pipe(csv())
       .on('data', (row) => {
-        try {
-          // Map CSV columns to transaction schema with validation
-          const transaction = {
-            userId: req.user._id,
-            date: validateCSVDate(row.date),
-            type: row.type.toLowerCase(),
-            fromAsset: row.fromAsset.toUpperCase(),
-            toAsset: row.toAsset.toUpperCase(),
-            fromAmount: validateCSVNumber(row.fromAmount, 'fromAmount', 0),
-            toAmount: validateCSVNumber(row.toAmount, 'toAmount', 0),
-            price: validateCSVNumber(row.price, 'price', 0),
-            fees: validateCSVNumber(row.fees || '0', 'fees', 0),
-            exchange: row.exchange,
-          };
-
-          // Validate required fields
-          if (!transaction.date || !transaction.type || !transaction.fromAsset || 
-              !transaction.toAsset || !transaction.exchange) {
-            throw new Error('Missing required fields');
-          }
-
-          transactions.push(transaction);
-        } catch (error) {
-          errors.push({
-            row: transactions.length + errors.length + 1,
-            error: error.message,
-          });
-        }
+        rawRows.push(row);
       })
       .on('end', async () => {
         try {
-          // Insert valid transactions
+          // Map and validate all rows
+          const transactions = [];
+          for (let i = 0; i < rawRows.length; i++) {
+            try {
+              const row = rawRows[i];
+              // Normalize date to midnight UTC
+              let dateObj = validateCSVDate(row.date);
+              dateObj = new Date(Date.UTC(dateObj.getUTCFullYear(), dateObj.getUTCMonth(), dateObj.getUTCDate()));
+              const transaction = {
+                userId: req.user._id,
+                date: dateObj,
+                type: row.type.toLowerCase(),
+                fromAsset: row.fromAsset.toUpperCase(),
+                toAsset: row.toAsset.toUpperCase(),
+                fromAmount: validateCSVNumber(row.fromAmount, 'fromAmount', 0),
+                toAmount: validateCSVNumber(row.toAmount, 'toAmount', 0),
+                price: validateCSVNumber(row.price, 'price', 0),
+                fees: validateCSVNumber(row.fees || '0', 'fees', 0),
+                exchange: row.exchange,
+              };
+              // Validate required fields
+              if (!transaction.date || !transaction.type || !transaction.fromAsset || 
+                  !transaction.toAsset || !transaction.exchange) {
+                throw new Error('Missing required fields');
+              }
+              transactions.push(transaction);
+            } catch (error) {
+              errors.push({
+                row: i + 1,
+                error: error.message,
+              });
+            }
+          }
+
+          // Deduplication: batch query for existing transactions
+          const orQueries = transactions.map(tx => ({
+            userId: tx.userId,
+            date: tx.date, // already normalized to midnight UTC
+            type: tx.type,
+            fromAsset: tx.fromAsset,
+            toAsset: tx.toAsset,
+            fromAmount: tx.fromAmount,
+            toAmount: tx.toAmount,
+            price: tx.price,
+            fees: tx.fees,
+            exchange: tx.exchange,
+          }));
+
+          let existing = [];
+          if (orQueries.length > 0) {
+            existing = await Transaction.find({ $or: orQueries }, null, { lean: true });
+          }
+
+          // Create a Set of stringified existing transactions for fast lookup
+          const existingSet = new Set(existing.map(e => JSON.stringify([
+            e.userId?.toString?.() ?? '',
+            // Normalize date to midnight UTC for comparison
+            new Date(Date.UTC(new Date(e.date).getUTCFullYear(), new Date(e.date).getUTCMonth(), new Date(e.date).getUTCDate())).toISOString(),
+            e.type,
+            e.fromAsset,
+            e.toAsset,
+            e.fromAmount,
+            e.toAmount,
+            e.price,
+            e.fees,
+            e.exchange
+          ])));
+
+          // Filter out duplicates
+          const uniqueTransactions = transactions.filter(tx => {
+            const key = JSON.stringify([
+              tx.userId?.toString?.() ?? '',
+              // Already normalized to midnight UTC
+              tx.date.toISOString(),
+              tx.type,
+              tx.fromAsset,
+              tx.toAsset,
+              tx.fromAmount,
+              tx.toAmount,
+              tx.price,
+              tx.fees,
+              tx.exchange
+            ]);
+            return !existingSet.has(key);
+          });
+
+          // Insert only unique transactions
           let insertedCount = 0;
-          if (transactions.length > 0) {
-            const result = await Transaction.insertMany(transactions, {
+          if (uniqueTransactions.length > 0) {
+            const result = await Transaction.insertMany(uniqueTransactions, {
               ordered: false,
             });
             insertedCount = result.length;

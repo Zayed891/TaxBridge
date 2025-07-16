@@ -12,7 +12,7 @@ export interface TaxCalculationResult {
   summary: {
     totalGain: number;
     totalLoss: number;
-    netGain: number;
+    netGains: number;
     taxOwed: number;
     effectiveRate: number;
   };

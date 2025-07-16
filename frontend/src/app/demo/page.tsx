@@ -96,7 +96,7 @@ export default function DemoPage() {
       if (response.success && response.data) {
         const result = response.data;
         setTaxResults({
-          totalGainLoss: result.summary.netGain,
+          totalGainLoss: result.summary.netGains,
           taxOwed: result.summary.taxOwed,
           effectiveRate: result.summary.effectiveRate,
           processedTransactions: result.metadata?.transactionCount ?? 0,
