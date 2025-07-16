@@ -1,0 +1,20 @@
+const mongoose = require('mongoose');
+require('dotenv').config();
+
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI);
+
+    console.log(`MongoDB Connected: ${conn.connection.host || 'MongoDB Atlas Cluster'}`);
+    console.log(`Database: ${conn.connection.name}`);
+  } catch (error) {
+    console.error('Database connection error:', error.message);
+    console.log('Running without database connection for testing...');
+    // Don't exit the process for development - allow API to run without DB
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
+  }
+};
+
+module.exports = connectDB;
