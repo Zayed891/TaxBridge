@@ -1,0 +1,20 @@
+{
+  "canisters": {
+    "taxbridge_backend": {
+      "main": "src/backend/main.mo",
+      "type": "motoko"
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": "vessel"
+    }
+  },
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000"
+    },
+    "ic": {}
+  },
+  "version": 1
+}
