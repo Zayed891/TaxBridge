@@ -4,7 +4,13 @@
 
 **TaxBridge** is a full-stack web app that automates crypto tax calculation and reporting for users and developers. Import your transactions, select your country and method, and get instant, audit-ready tax reports. Built for Web3, DeFi, and fintech innovation.
 
----
+## 📸 Screenshots
+
+![Homepage](frontend/screenshots/homepage.png)
+![Dashboard](frontend/screenshots/dashboard.png)
+![Demo](frontend/screenshots/demo.png)
+![Sign Up](frontend/screenshots/signup.png)
+![Sign In](frontend/screenshots/signin.png)
 
 ## 🌟 Why TaxBridge?
 
@@ -16,6 +22,7 @@
 
 ---
 
+
 ## ✨ Features
 
 - 🚚 **CSV Import:** Upload your crypto transaction history in seconds.
@@ -24,6 +31,32 @@
 - 📊 **Detailed Reports:** Export tax summaries and per-transaction breakdowns.
 - 🖥️ **Modern UI:** Next.js + Tailwind CSS for a fast, responsive experience.
 - 🔒 **Secure Backend:** Node.js/Express API, MongoDB, JWT authentication.
+
+---
+
+## 🚀 Roadmap & Scalability
+
+### Phase 1 Features (Ongoing)
+- CSV Import for crypto transactions
+- Automated tax calculation (FIFO, LIFO, Average Cost)
+- Multi-country support (US, UK, Canada, Australia)
+- Detailed tax reports and breakdowns
+- Modern Next.js + Tailwind CSS UI
+- Secure backend (Node.js/Express, MongoDB, JWT)
+
+### Phase 2 Features (Planned)
+- More countries (Germany, France, Japan)
+- DeFi protocol integration (Uniswap, Compound)
+- NFT transaction support
+- Staking rewards calculations
+- Mining income calculations
+
+### Phase 3 Features (Planned)
+- Real-time price integration
+- Advanced reporting features
+- Tax optimization suggestions
+- Webhook notifications
+- GraphQL API option
 
 ---
 
