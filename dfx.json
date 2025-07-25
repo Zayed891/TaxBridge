@@ -1,8 +1,10 @@
 {
+  "version": 1,
+  "dfx": "0.17.0",
   "canisters": {
     "taxbridge_backend": {
-      "main": "src/backend/main.mo",
-      "type": "motoko"
+      "type": "assets",
+      "source": "."
     }
   },
   "defaults": {
@@ -12,9 +14,11 @@
   },
   "networks": {
     "local": {
-      "bind": "127.0.0.1:8000"
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
     },
-    "ic": {}
-  },
-  "version": 1
+    "ic": {
+      "type": "persistent"
+    }
+  }
 }
